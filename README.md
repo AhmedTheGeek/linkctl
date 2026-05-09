@@ -29,26 +29,75 @@ Insta360 ships no Linux client. `linkctl` drives the camera over V4L2 ioctls —
 
 ## Requirements
 
-- Linux with the `uvcvideo` kernel module (built-in on every distro).
-- An Insta360 Link plugged in (other UVC PTZ webcams may work but are untested).
-- A Rust toolchain (≥ 1.78). Arch: `pacman -S rust`. Fedora: `dnf install cargo`. Debian/Ubuntu: install via [rustup.rs](https://rustup.rs).
-- A terminal emulator that supports the [kitty keyboard protocol](https://sw.kovidgoyal.net/kitty/keyboard-protocol/) for held-key motion (recommended): **kitty**, **ghostty**, **foot**, **wezterm**, or **alacritty ≥ 0.13**. In other terminals (xterm, gnome-terminal, konsole), motion degrades to one nudge per keypress and a banner explains the fallback.
+These apply regardless of how you install:
+
+- **Linux** with the `uvcvideo` kernel module (`uname -r` ≥ 4.4 — anything from 2016+). V4L2 is a Linux-only kernel API; macOS, Windows, and WSL1 are not supported.
+- A **UVC PTZ webcam** at `/dev/video*`. Optimized for the **Insta360 Link**; other UVC PTZ cams (Logitech CC3000e, Razer Kiyo Pro Ultra, OBSBOT Tiny PTZ) will mostly work since `linkctl` only uses standard UVC controls. Non-PTZ webcams will launch fine but most controls will be absent.
+- A terminal emulator that supports the [kitty keyboard protocol](https://sw.kovidgoyal.net/kitty/keyboard-protocol/) for held-key motion *(optional, recommended)*: **kitty**, **ghostty**, **foot**, **wezterm**, **alacritty ≥ 0.13**. In other terminals (xterm, gnome-terminal, konsole) motion degrades to one nudge per keypress and a banner explains the fallback.
 
 ## Install
 
-### Quick install (recommended)
+### Option 1 — pre-built binary (fastest)
+
+Grab the tarball from the [latest release](https://github.com/AhmedTheGeek/linkctl/releases/latest):
 
 ```sh
+curl -L https://github.com/AhmedTheGeek/linkctl/releases/download/v0.1.0/linkctl-v0.1.0-x86_64-unknown-linux-gnu.tar.gz | tar xz
+sudo install -m 755 linkctl-v0.1.0-x86_64-unknown-linux-gnu/linkctl /usr/local/bin/
+```
+
+The pre-built binary has tighter requirements than building from source:
+
+- **x86_64 only** (no ARM / Raspberry Pi / Apple Silicon).
+- **glibc ≥ 2.39** (the binary is dynamically linked).
+
+| Distro | glibc | Pre-built binary works? |
+|---|---|---|
+| Arch / EndeavourOS / Manjaro | rolling (≥ 2.43) | ✅ |
+| Fedora 40+ | 2.39+ | ✅ |
+| Ubuntu 24.04 LTS / 24.10 / 25.04 | 2.39+ | ✅ |
+| Debian 13 (Trixie) | 2.41 | ✅ |
+| openSUSE Tumbleweed | rolling | ✅ |
+| Ubuntu 22.04 LTS | 2.35 | ❌ — build from source |
+| Debian 12 (Bookworm) | 2.36 | ❌ — build from source |
+| RHEL 9 / Rocky 9 / Alma 9 | 2.34 | ❌ — build from source |
+| Any non-x86_64 (ARM, RISC-V) | — | ❌ — build from source for your arch |
+
+If you're not on the list, run `ldd --version | head -1` to check your glibc.
+
+### Option 2 — build from source
+
+This is the most portable path. Works on any architecture, any reasonable glibc, any Linux from the last decade.
+
+You'll need a Rust toolchain (≥ 1.78):
+
+- Arch: `sudo pacman -S rust`
+- Fedora: `sudo dnf install cargo`
+- Debian / Ubuntu: install via [rustup.rs](https://rustup.rs)
+
+Then:
+
+```sh
+git clone https://github.com/AhmedTheGeek/linkctl
+cd linkctl
 ./install.sh
 ```
 
-This builds in release mode and installs `linkctl` to `~/.cargo/bin/`. Make sure that directory is on your `$PATH` (`rustup` adds it automatically; otherwise add `export PATH="$HOME/.cargo/bin:$PATH"` to your shell rc).
+`install.sh` runs `cargo install --path .` (lands in `~/.cargo/bin/linkctl`) and adds that directory to your shell rc if it isn't on `$PATH` yet (handles bash, zsh, fish). Pass `--no-path` to skip the rc edit.
 
-### Manual install
+### Option 3 — static musl build (broadest reach)
+
+If you want a single binary that runs on **any** x86_64 Linux including ancient distros:
 
 ```sh
-cargo install --path .
+rustup target add x86_64-unknown-linux-musl
+# arch:   sudo pacman -S musl
+# debian: sudo apt install musl-tools
+cargo build --release --target x86_64-unknown-linux-musl
+sudo install -m 755 target/x86_64-unknown-linux-musl/release/linkctl /usr/local/bin/
 ```
+
+The resulting binary is ~2 MB, fully static, has no glibc dependency, and runs on Ubuntu 18.04 / RHEL 7 etc. without complaint.
 
 ### Development build (no install)
 
@@ -60,6 +109,8 @@ cargo build --release
 ### Uninstall
 
 ```sh
+./install.sh --uninstall   # cargo uninstall + remove PATH entry
+# or
 cargo uninstall linkctl
 ```
 
