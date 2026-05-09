@@ -2,6 +2,9 @@
 
 A terminal controller for the [Insta360 Link](https://www.insta360.com/product/insta360-link) UVC PTZ webcam on Linux.
 
+<img width="1894" height="1037" alt="screenshot-2026-05-09_21-31-18" src="https://github.com/user-attachments/assets/35a15869-9fe2-4c79-85c2-7e15624bed5e" />
+
+
 Insta360 ships no Linux client. `linkctl` drives the camera over V4L2 ioctls — no `v4l2-ctl` shell-out, no streaming side effects (control-only access). It gives you:
 
 - **Held-key gimbal motion** with WASD or arrow keys (kitty keyboard protocol; falls back to per-press nudge in legacy terminals).
