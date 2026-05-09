@@ -1,0 +1,26 @@
+[package]
+name = "linkctl"
+version = "0.1.0"
+edition = "2021"
+description = "Terminal controller for the Insta360 Link UVC PTZ webcam on Linux"
+license = "MIT"
+repository = "https://github.com/AhmedTheGeek/linkctl"
+readme = "README.md"
+categories = ["command-line-utilities", "multimedia::video"]
+keywords = ["v4l2", "uvc", "ptz", "webcam", "tui"]
+
+[dependencies]
+ratatui   = { version = "0.30", default-features = false, features = ["crossterm_0_29"] }
+crossterm = "0.29"
+v4l       = "0.14"
+serde     = { version = "1", features = ["derive"] }
+toml      = "0.8"
+dirs      = "5"
+anyhow    = "1"
+thiserror = "1"
+clap      = { version = "4", features = ["derive"] }
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = true
